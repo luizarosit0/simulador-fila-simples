@@ -12,9 +12,15 @@ M = 2**31 - 1
 # Estado atual do gerador
 X = X0
 
+class FimDaSimulacao(Exception):
+    pass
+
 def NextRandom():
     global X
     global count
+
+    if count == 0:
+        raise FimDaSimulacao()
 
     # Metodo Congruente Linear
     X = (a * X + c) % M
@@ -29,13 +35,13 @@ def NextRandom():
 """ Etapa 3 - Fila """
 
 # Variaveis globais 
-NUM_SERVIDORES = 1
+NUM_SERVIDORES = 2
 K = 5 # capacidade total do sistema 
 
 tempo_atual = 0.0
 fila = [] 
 servidores = [float('inf')] * NUM_SERVIDORES # tempo de saida de cada atendente (inf = livre)
-prox_chegada = 3.0
+prox_chegada = 2.0
 clientes_perdidos = 0
 
 times = [0.0] * (K + 1) # Etapa 4: tempo acumulado em cada estado (0..K)
@@ -48,29 +54,28 @@ def chegada():
     global prox_chegada
     global clientes_perdidos
 
-    # Agenda proxima chegada
-    intervalo_chegada = 2 + 3 * NextRandom()
-    prox_chegada = tempo_atual + intervalo_chegada
-
     # Se o sistema esta cheio (fila + em atendimento)
     if clientes_no_sistema() >= K:
         clientes_perdidos += 1 # perde cliente
-        return
-
-    # Procura um servidor livre
-    livre = None
-    for i in range(NUM_SERVIDORES):
-        if servidores[i] == float('inf'):
-            livre = i
-            break
-
-    # Se ha servidor livre, atende direto
-    if livre is not None:
-        tempo_atendimento = 3 + 2 * NextRandom()
-        servidores[livre] = tempo_atual + tempo_atendimento
-    # Senao, entra na fila de espera
     else:
-        fila.append(tempo_atual)
+        # Procura um servidor livre
+        livre = None
+        for i in range(NUM_SERVIDORES):
+            if servidores[i] == float('inf'):
+                livre = i
+                break
+
+        # Se ha servidor livre, atende direto
+        if livre is not None:
+            tempo_atendimento = 3 + 2 * NextRandom()
+            servidores[livre] = tempo_atual + tempo_atendimento
+        # Senao, entra na fila de espera
+        else:
+            fila.append(tempo_atual)
+
+    # Agenda proxima chegada
+    intervalo_chegada = 2 + 3 * NextRandom()
+    prox_chegada = tempo_atual + intervalo_chegada
 
 def saida():
     # Descobre qual servidor gerou esta saida
@@ -88,25 +93,28 @@ def saida():
 """ Etapa 2 - Loop """
 count = 100000
 
-while count > 0:
-    prox_saida = min(servidores)
+try:
+    while count > 0:
+        prox_saida = min(servidores)
 
-    if prox_chegada <= prox_saida:
-        proximo_tempo = prox_chegada
-        tipo_evento = "chegada"
-    else:
-        proximo_tempo = prox_saida
-        tipo_evento = "saida"
+        if prox_chegada <= prox_saida:
+            proximo_tempo = prox_chegada
+            tipo_evento = "chegada"
+        else:
+            proximo_tempo = prox_saida
+            tipo_evento = "saida"
 
-    estado = clientes_no_sistema()
-    times[estado] += (proximo_tempo - tempo_atual)
+        estado = clientes_no_sistema()
+        times[estado] += (proximo_tempo - tempo_atual)
 
-    tempo_atual = proximo_tempo
+        tempo_atual = proximo_tempo
 
-    if tipo_evento == "chegada":
-        chegada()
-    else:
-        saida()
+        if tipo_evento == "chegada":
+            chegada()
+        else:
+            saida()
+except FimDaSimulacao:
+    pass
 
 TempoGlobal = tempo_atual
 
