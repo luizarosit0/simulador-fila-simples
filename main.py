@@ -41,7 +41,7 @@ K = 5 # capacidade total do sistema
 tempo_atual = 0.0
 fila = [] 
 servidores = [float('inf')] * NUM_SERVIDORES # tempo de saida de cada atendente (inf = livre)
-prox_chegada = 2.0
+prox_chegada = 3.0
 clientes_perdidos = 0
 
 times = [0.0] * (K + 1) # Etapa 4: tempo acumulado em cada estado (0..K)
@@ -67,14 +67,14 @@ def chegada():
 
         # Se ha servidor livre, atende direto
         if livre is not None:
-            tempo_atendimento = 3 + 2 * NextRandom()
+            tempo_atendimento = 4 + NextRandom()
             servidores[livre] = tempo_atual + tempo_atendimento
         # Senao, entra na fila de espera
         else:
             fila.append(tempo_atual)
 
     # Agenda proxima chegada
-    intervalo_chegada = 2 + 3 * NextRandom()
+    intervalo_chegada = 3 + 2 * NextRandom()
     prox_chegada = tempo_atual + intervalo_chegada
 
 def saida():
@@ -84,7 +84,7 @@ def saida():
     # Se existirem clientes esperando, o proximo entra em atendimento
     if len(fila) > 0:
         fila.pop(0)
-        tempo_atendimento = 3 + 2 * NextRandom()
+        tempo_atendimento = 4 + NextRandom()
         servidores[idx] = tempo_atual + tempo_atendimento
     else:
         servidores[idx] = float('inf')
